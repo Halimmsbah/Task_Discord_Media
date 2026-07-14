@@ -1,9 +1,6 @@
 import React, {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
-  useMemo,
   useState,
 } from 'react';
 
@@ -28,8 +25,6 @@ import MediaGrid from '../components/MediaGrid';
 import MembersList from '../components/MembersList';
 import { buildFileUrl } from '../services/fileUrl';
 import { loadRoomPage, ROOM_PAGE_SIZE } from '../services/roomMediaService';
-
-const RoomMediaContext = createContext(null);
 
 const tabs = ['Members', 'Media', 'Pins', 'Links', 'Files'];
 
@@ -56,23 +51,25 @@ const createInitialTabState = () => ({
   Files: createEmptyTabState(),
 });
 
-const mergeById = (currentItems, nextItems) => {
-  const seen = new Set(currentItems.map((item) => item.id));
-  const merged = [...currentItems];
-
-  nextItems.forEach((item) => {
-    if (!seen.has(item.id)) {
-      seen.add(item.id);
-      merged.push(item);
-    }
-  });
-
-  return merged;
-};
-
-function RoomMediaProvider({ children }) {
+export default function HomeScreen() {
+  const [activeTab, setActiveTab] = useState('Media');
+  const [previewImage, setPreviewImage] = useState(null);
   const [tabState, setTabState] = useState(createInitialTabState());
   const [error, setError] = useState('');
+
+  const mergeById = useCallback((currentItems, nextItems) => {
+    const seen = new Set(currentItems.map((item) => item.id));
+    const merged = [...currentItems];
+
+    nextItems.forEach((item) => {
+      if (!seen.has(item.id)) {
+        seen.add(item.id);
+        merged.push(item);
+      }
+    });
+
+    return merged;
+  }, []);
 
   const loadTabPage = useCallback(async (tabName, page, isLoadingMore) => {
     const requestType = tabRequestTypes[tabName];
@@ -139,81 +136,35 @@ function RoomMediaProvider({ children }) {
       }));
       setError('Could not load room media.');
     }
-  }, []);
+  }, [mergeById]);
 
-  const ensureTabLoaded = useCallback(
-    async (tabName) => {
-      const currentTab = tabState[tabName];
+  const ensureTabLoaded = useCallback(async (tabName) => {
+    const currentTab = tabState[tabName];
 
-      if (!currentTab || currentTab.loaded || currentTab.loading) {
-        return;
-      }
+    if (!currentTab || currentTab.loaded || currentTab.loading) {
+      return;
+    }
 
-      await loadTabPage(tabName, 1, false);
-    },
-    [loadTabPage, tabState],
-  );
+    await loadTabPage(tabName, 1, false);
+  }, [loadTabPage, tabState]);
 
-  const loadMoreTab = useCallback(
-    async (tabName) => {
-      const requestType = tabRequestTypes[tabName];
-      const currentTab = tabState[tabName];
+  const loadMoreTab = useCallback(async (tabName) => {
+    const requestType = tabRequestTypes[tabName];
+    const currentTab = tabState[tabName];
 
-      if (
-        !requestType ||
-        !currentTab ||
-        !currentTab.loaded ||
-        currentTab.loading ||
-        currentTab.loadingMore ||
-        !currentTab.hasMore
-      ) {
-        return;
-      }
+    if (
+      !requestType ||
+      !currentTab ||
+      !currentTab.loaded ||
+      currentTab.loading ||
+      currentTab.loadingMore ||
+      !currentTab.hasMore
+    ) {
+      return;
+    }
 
-      await loadTabPage(tabName, currentTab.page + 1, true);
-    },
-    [loadTabPage, tabState],
-  );
-
-  const contextValue = useMemo(
-    () => ({
-      tabState,
-      error,
-      ensureTabLoaded,
-      loadMoreTab,
-    }),
-    [ensureTabLoaded, error, loadMoreTab, tabState],
-  );
-
-  return (
-    <RoomMediaContext.Provider value={contextValue}>
-      {children}
-    </RoomMediaContext.Provider>
-  );
-}
-
-function useRoomMedia() {
-  const context = useContext(RoomMediaContext);
-
-  if (!context) {
-    throw new Error('useRoomMedia must be used inside RoomMediaProvider.');
-  }
-
-  return context;
-}
-
-export default function HomeScreen() {
-  return (
-    <RoomMediaProvider>
-      <HomeScreenContent />
-    </RoomMediaProvider>
-  );
-}
-
-function HomeScreenContent() {
-  const [activeTab, setActiveTab] = useState('Media');
-  const [previewImage, setPreviewImage] = useState(null);
-  const { tabState, error, ensureTabLoaded, loadMoreTab } = useRoomMedia();
+    await loadTabPage(tabName, currentTab.page + 1, true);
+  }, [loadTabPage, tabState]);
 
   useEffect(() => {
     ensureTabLoaded(activeTab);

@@ -47,21 +47,15 @@ const normalizeAuthorName = (author) =>
       ''
     : '';
 
-    const normalizeImage = (item, index) => {
-      return {
-        id: normalizeId(item, index),
-    
-        image: buildImageUrl({
-          shieldedID: item.content,
-        }),
-    
-        shieldedID: item.content,
-    
-        authorName: normalizeAuthorName(item.author),
-    
-        date: item.date,
-      };
-    };
+const normalizeImage = (item, index) => ({
+  id: normalizeId(item, index),
+  image: buildImageUrl({
+    shieldedID: item.content,
+  }),
+  shieldedID: item.content,
+  authorName: normalizeAuthorName(item.author),
+  date: item.date,
+});
 
 const normalizeFile = (item, index) => {
   const file = item.file || item.attachment || item;
@@ -101,61 +95,61 @@ const normalizeMember = (item, index) => ({
     'Unknown member',
 });
 
-  const searchRoom = async (type, roomId = ROOM_ID, page = 1, limit = ROOM_PAGE_SIZE) => {
+const searchRoom = async (type, roomId = ROOM_ID, page = 1, limit = ROOM_PAGE_SIZE) => {
   if (!roomId || roomId === 'room-id-here') {
     return [];
   }
 
   const response = await API.post(ENDPOINTS.roomSearch(roomId), {
     roomId,
-      page,
-      limit,
+    page,
+    limit,
     type,
   });
 
   return toArray(response.data);
 };
 
-  const normalizeByType = (type, item, index) => {
-    if (type === 'image') {
-      return normalizeImage(item, index);
-    }
+const normalizeByType = (type, item, index) => {
+  if (type === 'image') {
+    return normalizeImage(item, index);
+  }
 
-    if (type === 'file') {
-      return normalizeFile(item, index);
-    }
+  if (type === 'file') {
+    return normalizeFile(item, index);
+  }
 
-    if (type === 'link') {
-      return normalizeLink(item, index);
-    }
+  if (type === 'link') {
+    return normalizeLink(item, index);
+  }
 
-    if (type === 'member') {
-      return normalizeMember(item, index);
-    }
+  if (type === 'member') {
+    return normalizeMember(item, index);
+  }
 
-    return {
-      ...item,
-      id: normalizeId(item, index),
-    };
+  return {
+    ...item,
+    id: normalizeId(item, index),
   };
+};
 
-  export const loadRoomPage = async ({
-    type,
-    roomId = ROOM_ID,
-    page = 1,
-    limit = ROOM_PAGE_SIZE,
-  }) => {
-    const items = await searchRoom(type, roomId, page, limit);
-    const normalizedItems = items.map((item, index) => normalizeByType(type, item, index));
+export const loadRoomPage = async ({
+  type,
+  roomId = ROOM_ID,
+  page = 1,
+  limit = ROOM_PAGE_SIZE,
+}) => {
+  const items = await searchRoom(type, roomId, page, limit);
+  const normalizedItems = items.map((item, index) => normalizeByType(type, item, index));
 
-    return {
-      items:
-        type === 'link'
-          ? normalizedItems.filter((item) => item.url)
-          : normalizedItems,
-      hasMore: items.length === limit,
-    };
+  return {
+    items:
+      type === 'link'
+        ? normalizedItems.filter((item) => item.url)
+        : normalizedItems,
+    hasMore: items.length === limit,
   };
+};
 
 export const loadRoomOverview = async (roomId = ROOM_ID) => {
   const [imageMessages, fileMessages, linkMessages, pinnedMessages] =
