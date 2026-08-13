@@ -9,15 +9,23 @@ import {
   Pressable,
 } from 'react-native';
 import EmptyState from './EmptyState';
+import type { RoomItem } from '../services/roomMediaService';
 
 const screenWidth = Dimensions.get('window').width;
+
+type MediaGridProps = {
+  media: RoomItem[];
+  onPressImage?: (item: RoomItem) => void;
+  onEndReached?: () => void;
+  loadingMore?: boolean;
+};
 
 export default function MediaGrid({
   media,
   onPressImage,
   onEndReached,
   loadingMore,
-}) {
+}: MediaGridProps) {
   return (
     <FlatList
       data={media}

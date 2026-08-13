@@ -1,20 +1,38 @@
 import axios from 'axios';
 import { API_BASE_URL, DEV_PHONE, ENDPOINTS } from '../config/apiConfig';
 
-let cachedAuthToken = null;
-let authTokenPromise = null;
+let cachedAuthToken: string | null = null;
+let authTokenPromise: Promise<string> | null = null;
 
-const extractToken = (responseData) =>
-  responseData?.token ||
-  responseData?.accessToken ||
-  responseData?.data?.token ||
-  responseData?.data?.accessToken ||
-  responseData?.result?.token ||
-  responseData?.result?.accessToken ||
-  (typeof responseData === 'string' ? responseData : null) ||
-  null;
+type TokenPayload = {
+  token?: string;
+  accessToken?: string;
+  data?: { token?: string; accessToken?: string };
+  result?: { token?: string; accessToken?: string };
+};
 
-const loadAuthToken = async () => {
+const extractToken = (responseData: unknown): string | null => {
+  if (typeof responseData === 'string') {
+    return responseData || null;
+  }
+
+  if (responseData && typeof responseData === 'object') {
+    const payload = responseData as TokenPayload;
+    return (
+      payload.token ||
+      payload.accessToken ||
+      payload.data?.token ||
+      payload.data?.accessToken ||
+      payload.result?.token ||
+      payload.result?.accessToken ||
+      null
+    );
+  }
+
+  return null;
+};
+
+const loadAuthToken = async (): Promise<string> => {
   if (cachedAuthToken) {
     return cachedAuthToken;
   }

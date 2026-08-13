@@ -9,13 +9,21 @@ import {
   StyleSheet,
 } from 'react-native';
 import EmptyState from './EmptyState';
+import type { RoomItem } from '../services/roomMediaService';
+
+type FilesListProps = {
+  files: RoomItem[];
+  onPressFile?: (item: RoomItem) => void;
+  onEndReached?: () => void;
+  loadingMore?: boolean;
+};
 
 export default function FilesList({
   files,
   onPressFile,
   onEndReached,
   loadingMore,
-}) {
+}: FilesListProps) {
 
   return (
 

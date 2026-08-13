@@ -1,7 +1,9 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-export default function EmptyState({ message }) {
+type EmptyStateProps = { message: string };
+
+export default function EmptyState({ message }: EmptyStateProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>{message}</Text>

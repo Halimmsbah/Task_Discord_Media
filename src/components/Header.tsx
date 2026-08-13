@@ -9,11 +9,7 @@ import {
 
 import { Ionicons } from '@expo/vector-icons';
 
-export default function Header({
-  activeTab,
-  setActiveTab,
-  tabs,
-}) {
+export default function Header() {
   return (
     <View style={styles.header}>
 
@@ -86,42 +82,6 @@ export default function Header({
 
       </View>
 
-      {/* TABS */}
-      <View style={styles.tabsContainer}>
-
-        {tabs.map((tab) => (
-
-          <Pressable
-            key={tab}
-            onPress={() => setActiveTab(tab)}
-          >
-
-            <View style={styles.tabItem}>
-
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === tab &&
-                  styles.activeTabText,
-                ]}
-              >
-                {tab}
-              </Text>
-
-              {
-                activeTab === tab && (
-                  <View style={styles.activeLine} />
-                )
-              }
-
-            </View>
-
-          </Pressable>
-
-        ))}
-
-      </View>
-
     </View>
   );
 }
@@ -130,6 +90,7 @@ const styles = StyleSheet.create({
 
   header: {
     marginTop: 5,
+    paddingHorizontal: 16,
   },
 
   topRow: {
@@ -158,6 +119,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     marginTop: 15,
+    marginBottom: 10,
   },
 
   profileImage: {
@@ -201,35 +163,6 @@ const styles = StyleSheet.create({
     color: 'gray',
     fontSize: 16,
     marginTop: 2,
-  },
-
-  tabsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 25,
-    marginTop: 10,
-  },
-
-  tabItem: {
-    alignItems: 'center',
-    gap: 4,
-  },
-
-  tabText: {
-    color: 'gray',
-    fontSize: 16,
-  },
-
-  activeTabText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-
-  activeLine: {
-    width: '100%',
-    height: 3,
-    backgroundColor: '#5865F2',
-    borderRadius: 1.5,
   },
 
 });

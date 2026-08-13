@@ -9,11 +9,16 @@ import {
   StyleSheet,
 } from 'react-native';
 import EmptyState from './EmptyState';
+import type { RoomItem } from '../services/roomMediaService';
 
-export default function LinksList({ links }) {
+type LinksListProps = { links: RoomItem[] };
 
-  const openLink = (url) => {
-    Linking.openURL(url);
+export default function LinksList({ links }: LinksListProps) {
+
+  const openLink = (url?: string) => {
+    if (url) {
+      Linking.openURL(url);
+    }
   };
 
   return (

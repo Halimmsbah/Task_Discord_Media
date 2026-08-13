@@ -7,8 +7,11 @@ import {
   StyleSheet,
 } from 'react-native';
 import EmptyState from './EmptyState';
+import type { RoomItem } from '../services/roomMediaService';
 
-export default function MembersList({ members }) {
+type MembersListProps = { members: RoomItem[] };
+
+export default function MembersList({ members }: MembersListProps) {
 
   return (
 
