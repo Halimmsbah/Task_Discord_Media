@@ -15,7 +15,7 @@ const screenWidth = Dimensions.get('window').width;
 
 type MediaGridProps = {
   media: RoomItem[];
-  onPressImage?: (item: RoomItem) => void;
+  onPressImage?: (item: RoomItem, index: number) => void;
   onEndReached?: () => void;
   loadingMore?: boolean;
 };
@@ -47,8 +47,8 @@ export default function MediaGrid({
       windowSize={5}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.35}
-      renderItem={({ item }) => (
-        <Pressable onPress={() => onPressImage?.(item)}>
+      renderItem={({ item, index }) => (
+        <Pressable onPress={() => onPressImage?.(item, index)}>
           <Image
             source={{ uri: item.image, cache: 'force-cache' }}
             style={styles.mediaImage}

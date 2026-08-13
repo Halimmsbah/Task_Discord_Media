@@ -4,10 +4,8 @@ import { buildFileUrl, buildImageUrl } from './fileUrl';
 
 export const ROOM_PAGE_SIZE = 20;
 
-// Search types the room endpoint understands.
 export type RoomSearchType = 'image' | 'file' | 'link' | 'member' | 'pinned';
 
-// A file blob as it arrives inside a message.
 type ApiFile = {
   name?: string;
   filename?: string;
@@ -17,7 +15,6 @@ type ApiFile = {
   date?: string;
 };
 
-// A raw message from the search API (only the fields we actually read).
 type RoomMessage = {
   _id?: string;
   id?: string;
@@ -35,7 +32,6 @@ type RoomMessage = {
   lastName?: string;
 };
 
-// A normalized item the screens consume.
 export type RoomItem = {
   id: string;
   image?: string;
@@ -46,7 +42,6 @@ export type RoomItem = {
   date?: string;
 };
 
-// The search API returns messages under `messages`; accept a bare array too.
 const toArray = (payload: unknown): RoomMessage[] => {
   if (Array.isArray(payload)) {
     return payload as RoomMessage[];
@@ -157,6 +152,36 @@ const normalizeByType = (
   };
 };
 
+type ApiRoomPerson = {
+  _id?: string;
+  firstName?: string;
+  lastName?: string;
+  name?: string;
+  username?: string;
+  phone?: string;
+};
+
+export const loadRoomMembers = async (
+  roomId: string = ROOM_ID,
+): Promise<RoomItem[]> => {
+  const response = await API.post(ENDPOINTS.roomsList, { limit: 4000 });
+  const rooms = (response.data?.rooms ?? []) as {
+    _id?: string;
+    people?: ApiRoomPerson[];
+  }[];
+  const people = rooms.find((room) => room._id === roomId)?.people ?? [];
+
+  return people.map((person, index) => ({
+    id: String(person._id || index),
+    name:
+      person.name ||
+      [person.firstName, person.lastName].filter(Boolean).join(' ') ||
+      person.username ||
+      person.phone ||
+      'Unknown member',
+  }));
+};
+
 export const loadRoomPage = async ({
   type,
   roomId = ROOM_ID,
@@ -178,8 +203,7 @@ export const loadRoomPage = async ({
       type === 'link'
         ? normalizedItems.filter((item) => Boolean(item.url))
         : normalizedItems,
-    // The search API returns only `messages` + `currentPage` (no total count),
-    // so a full page (=== limit) is our signal that another page may exist.
+    // no total from the API, so a full page means there may be more
     hasMore: items.length === limit,
   };
 };

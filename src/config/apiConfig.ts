@@ -5,6 +5,7 @@ export const DEV_PHONE = '+201000260660';
 export const ROOM_ID = '6a536fc3507c0259289f777d';
 
 export const ENDPOINTS = {
+  roomsList: '/api/rooms/list',
   roomSearch: (roomId: string) => `/api/room/${roomId}/search`,
   testToken: (phone: string) =>
     `/api/dev/test-token?phone=${encodeURIComponent(phone)}`,

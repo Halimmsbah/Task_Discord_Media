@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 
 import {
+  loadRoomMembers,
   loadRoomPage,
   ROOM_PAGE_SIZE,
   type RoomItem,
@@ -22,6 +23,7 @@ export type TabState = {
   loaded: boolean;
   loading: boolean;
   loadingMore: boolean;
+  error: string;
 };
 
 type TabStateMap = Record<TabName, TabState>;
@@ -39,6 +41,7 @@ const createEmptyTabState = (): TabState => ({
   loaded: false,
   loading: false,
   loadingMore: false,
+  error: '',
 });
 
 const createInitialTabState = (): TabStateMap => ({
@@ -51,7 +54,8 @@ const createInitialTabState = (): TabStateMap => ({
 
 type RoomMediaContextValue = {
   tabState: TabStateMap;
-  error: string;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
   ensureTabLoaded: (tabName: TabName) => void;
   loadMoreTab: (tabName: TabName) => Promise<void>;
   handleRetry: (tabName: TabName) => void;
@@ -61,7 +65,7 @@ const RoomMediaContext = createContext<RoomMediaContextValue | null>(null);
 
 export function RoomMediaProvider({ children }: { children: React.ReactNode }) {
   const [tabState, setTabState] = useState<TabStateMap>(createInitialTabState());
-  const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const requestedTabs = useRef<Set<TabName>>(new Set());
 
   const mergeById = useCallback(
@@ -85,7 +89,7 @@ export function RoomMediaProvider({ children }: { children: React.ReactNode }) {
     async (tabName: TabName, page: number, isLoadingMore: boolean) => {
       const requestType = tabRequestTypes[tabName];
 
-      if (!requestType) {
+      if (tabName !== 'Members' && !requestType) {
         setTabState((currentState) => ({
           ...currentState,
           [tabName]: {
@@ -105,15 +109,19 @@ export function RoomMediaProvider({ children }: { children: React.ReactNode }) {
           ...currentState[tabName],
           loading: !isLoadingMore,
           loadingMore: isLoadingMore,
+          error: '',
         },
       }));
 
       try {
-        const { items, hasMore } = await loadRoomPage({
-          type: requestType,
-          page,
-          limit: ROOM_PAGE_SIZE,
-        });
+        const { items, hasMore } =
+          tabName === 'Members'
+            ? { items: await loadRoomMembers(), hasMore: false }
+            : await loadRoomPage({
+                type: requestType as RoomSearchType,
+                page,
+                limit: ROOM_PAGE_SIZE,
+              });
 
         setTabState((currentState) => {
           const currentTab = currentState[tabName];
@@ -131,15 +139,12 @@ export function RoomMediaProvider({ children }: { children: React.ReactNode }) {
               loaded: true,
               loading: false,
               loadingMore: false,
+              error: '',
             },
           };
         });
-
-        setError('');
-      } catch (loadError) {
-        // Allow a later retry/revisit, but do NOT auto-retry here: the load
-        // effect only depends on activeTab, so a failed tab stays failed until
-        // the user acts, instead of re-firing on every state change.
+      } catch {
+        // allow manual retry later, but don't auto-retry
         requestedTabs.current.delete(tabName);
         setTabState((currentState) => ({
           ...currentState,
@@ -147,9 +152,9 @@ export function RoomMediaProvider({ children }: { children: React.ReactNode }) {
             ...currentState[tabName],
             loading: false,
             loadingMore: false,
+            error: 'Could not load room media.',
           },
         }));
-        setError('Could not load room media.');
       }
     },
     [mergeById],
@@ -170,7 +175,6 @@ export function RoomMediaProvider({ children }: { children: React.ReactNode }) {
   const handleRetry = useCallback(
     (tabName: TabName) => {
       requestedTabs.current.delete(tabName);
-      setError('');
       ensureTabLoaded(tabName);
     },
     [ensureTabLoaded],
@@ -199,7 +203,8 @@ export function RoomMediaProvider({ children }: { children: React.ReactNode }) {
 
   const value: RoomMediaContextValue = {
     tabState,
-    error,
+    searchTerm,
+    setSearchTerm,
     ensureTabLoaded,
     loadMoreTab,
     handleRetry,

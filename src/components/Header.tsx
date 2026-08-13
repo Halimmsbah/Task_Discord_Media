@@ -8,8 +8,24 @@ import {
 } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-export default function Header() {
+import type { RootStackParamList } from '../navigation/RootStack';
+
+const profileImage = require('../../assets/Halim.png');
+
+type HeaderProps = { onSearchPress?: () => void };
+
+export default function Header({ onSearchPress }: HeaderProps) {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  const openProfile = () => {
+    const { uri } = Image.resolveAssetSource(profileImage);
+    navigation.navigate('MediaPreview', { uris: [uri], index: 0 });
+  };
+
   return (
     <View style={styles.header}>
 
@@ -24,7 +40,7 @@ export default function Header() {
 
         <View style={styles.iconsContainer}>
 
-          <Pressable style={styles.iconButton}>
+          <Pressable style={styles.iconButton} onPress={onSearchPress}>
             <Ionicons
               name="search"
               size={20}
@@ -55,10 +71,10 @@ export default function Header() {
       {/* PROFILE */}
       <View style={styles.profileSection}>
 
-        <View style={styles.profileImageWrapper}>
+        <Pressable style={styles.profileImageWrapper} onPress={openProfile}>
 
           <Image
-            source={require('../../assets/Halim.png')}
+            source={profileImage}
             style={styles.profileImage}
           />
 
@@ -66,7 +82,7 @@ export default function Header() {
             <View style={styles.statusOnline} />
           </View>
 
-        </View>
+        </Pressable>
 
         <View>
 

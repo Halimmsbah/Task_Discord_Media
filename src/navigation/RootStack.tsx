@@ -5,7 +5,7 @@ import MediaPreviewScreen from '../screens/MediaPreviewScreen';
 
 export type RootStackParamList = {
   Room: undefined;
-  MediaPreview: { uri: string };
+  MediaPreview: { uris: string[]; index: number };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
